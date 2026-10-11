@@ -3,6 +3,7 @@ import { createCodeEditor } from './editor.js';
 import { formatHTML, formatCSS } from './formatter.js';
 import { LivePreview } from './preview.js';
 import { defaultTemplates } from './templates.js';
+import { CollaborationManager } from './collaboration.js';
 
 // Global Application State (Strictly HTML & CSS)
 const STATE = {
@@ -11,7 +12,10 @@ const STATE = {
   activeTab: 'html',
   activeDevice: 'desktop',
   autoSaveKey: 'html_css_compiler_data_v2',
-  consoleLogs: []
+  consoleLogs: [],
+  roomName: 'phong-hoc-01',
+  userName: 'Thầy Giáo',
+  userRole: 'teacher'
 };
 
 // DOM Element Selectors
@@ -48,6 +52,19 @@ const elements = {
   btnDownload: document.getElementById('btn-download'),
   btnTemplates: document.getElementById('btn-templates'),
   btnClear: document.getElementById('btn-clear'),
+  btnShareRoom: document.getElementById('btn-share-room'),
+  realtimeStatusTag: document.getElementById('realtime-status-tag'),
+  usersOnlineBadge: document.getElementById('users-online-badge'),
+  footerConnStatus: document.getElementById('footer-connection-status'),
+  
+  // Room Modal
+  roomModal: document.getElementById('room-modal'),
+  btnCloseRoomModal: document.getElementById('btn-close-room-modal'),
+  inputRoomId: document.getElementById('input-room-id'),
+  inputUserName: document.getElementById('input-user-name'),
+  selectUserRole: document.getElementById('select-user-role'),
+  btnConnectRoom: document.getElementById('btn-connect-room'),
+  btnCopyRoomLink: document.getElementById('btn-copy-room-link'),
   
   // Footer
   statsChars: document.getElementById('stats-chars'),
@@ -62,9 +79,10 @@ const elements = {
   toastContainer: document.getElementById('toast-container')
 };
 
-// CodeMirror View Instances
+// CodeMirror View Instances & Collab
 let htmlEditor, cssEditor;
 let livePreview;
+let collabManager = null;
 
 /**
  * Initialize application
@@ -73,36 +91,119 @@ function init() {
   // 1. Initialize Lucide Icons
   createIcons({ icons });
 
-  // 2. Load saved code from LocalStorage or Default Template
+  // 2. Parse URL parameters for room & role
+  parseUrlParams();
+
+  // 3. Load saved code from LocalStorage or Default Template
   loadSavedData();
 
-  // 3. Initialize CodeMirror Editors for HTML & CSS
-  htmlEditor = createCodeEditor(elements.htmlContainer, 'html', STATE.htmlCode, (val) => {
-    STATE.htmlCode = val;
-    onCodeChange();
-  });
+  // 4. Initialize Collaboration Engine (Yjs + Y-Websocket)
+  initCollaboration();
 
-  cssEditor = createCodeEditor(elements.cssContainer, 'css', STATE.cssCode, (val) => {
-    STATE.cssCode = val;
-    onCodeChange();
-  });
-
-  // 4. Initialize Live Preview Compiler
+  // 5. Initialize Live Preview Compiler
   livePreview = new LivePreview(elements.iframe, (type, args) => {
     appendConsoleLog(type, args);
   });
 
-  // 5. Initial Compilation Render
+  // 6. Initial Compilation Render
   livePreview.update(STATE.htmlCode, STATE.cssCode, 0);
 
-  // 6. Setup Event Listeners
+  // 7. Setup Event Listeners
   setupEventListeners();
 
-  // 7. Render Template Modal Grid
+  // 8. Render Template Modal Grid
   renderTemplates();
 
-  // 8. Update Footer Stats
+  // 9. Update Footer Stats
   updateStats();
+}
+
+/**
+ * Parse URL Query Parameters
+ */
+function parseUrlParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('room')) STATE.roomName = urlParams.get('room');
+  if (urlParams.has('role')) STATE.userRole = urlParams.get('role');
+  if (urlParams.has('name')) STATE.userName = urlParams.get('name');
+
+  elements.inputRoomId.value = STATE.roomName;
+  elements.inputUserName.value = STATE.userName;
+  elements.selectUserRole.value = STATE.userRole;
+}
+
+/**
+ * Initialize Yjs Collaboration Engine
+ */
+function initCollaboration() {
+  if (collabManager) {
+    collabManager.provider.destroy();
+  }
+
+  collabManager = new CollaborationManager(null, STATE.roomName, {
+    name: STATE.userName,
+    role: STATE.userRole
+  });
+
+  // Re-create CodeMirror editors with Yjs Bindings
+  elements.htmlContainer.innerHTML = '';
+  elements.cssContainer.innerHTML = '';
+
+  htmlEditor = createCodeEditor(
+    elements.htmlContainer, 
+    'html', 
+    STATE.htmlCode, 
+    (val) => {
+      STATE.htmlCode = val;
+      onCodeChange();
+    },
+    { yText: collabManager.yTextHTML, provider: collabManager.provider }
+  );
+
+  cssEditor = createCodeEditor(
+    elements.cssContainer, 
+    'css', 
+    STATE.cssCode, 
+    (val) => {
+      STATE.cssCode = val;
+      onCodeChange();
+    },
+    { yText: collabManager.yTextCSS, provider: collabManager.provider }
+  );
+
+  // Observe Yjs Text changes from remote collaborators
+  collabManager.yTextHTML.observe(() => {
+    STATE.htmlCode = collabManager.yTextHTML.toString();
+    livePreview.update(STATE.htmlCode, STATE.cssCode, 100);
+    updateStats();
+  });
+
+  collabManager.yTextCSS.observe(() => {
+    STATE.cssCode = collabManager.yTextCSS.toString();
+    livePreview.update(STATE.htmlCode, STATE.cssCode, 100);
+    updateStats();
+  });
+
+  // Track Realtime Connection Status
+  collabManager.onConnected((status) => {
+    if (status === 'connected') {
+      elements.realtimeStatusTag.textContent = `🟢 ONLINE: ${STATE.roomName}`;
+      elements.realtimeStatusTag.style.background = 'rgba(16, 185, 129, 0.2)';
+      elements.realtimeStatusTag.style.color = '#34d399';
+      elements.footerConnStatus.textContent = `Yjs Realtime: Connected (${STATE.roomName})`;
+    } else {
+      elements.realtimeStatusTag.textContent = `🟡 DISCONNECTED`;
+      elements.realtimeStatusTag.style.background = 'rgba(239, 68, 68, 0.2)';
+      elements.realtimeStatusTag.style.color = '#f87171';
+      elements.footerConnStatus.textContent = `Yjs Realtime: Disconnected`;
+    }
+  });
+
+  // Track Awareness Online Users
+  collabManager.provider.awareness.on('change', () => {
+    const users = collabManager.getAwarenessUsers();
+    elements.usersOnlineBadge.textContent = `👥 ${users.length} người đang online trong phòng`;
+  });
 }
 
 /**
@@ -157,7 +258,6 @@ function handleFormatPretty() {
   STATE.htmlCode = formattedHTML;
   STATE.cssCode = formattedCSS;
 
-  // Update CodeMirror Document Content
   htmlEditor.dispatch({
     changes: { from: 0, to: htmlEditor.state.doc.length, insert: formattedHTML }
   });
@@ -173,7 +273,7 @@ function handleFormatPretty() {
  * Setup Event Listeners
  */
 function setupEventListeners() {
-  // Tab switching (HTML & CSS)
+  // Tab switching
   elements.tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.getAttribute('data-tab');
@@ -243,6 +343,33 @@ ${STATE.htmlCode}
       onCodeChange();
       showToast('🗑️ Đã xóa sạch dữ liệu mã nguồn.', 'info');
     }
+  });
+
+  // Room Modal Toggles
+  elements.btnShareRoom.addEventListener('click', () => {
+    elements.roomModal.classList.add('active');
+  });
+
+  elements.btnCloseRoomModal.addEventListener('click', () => {
+    elements.roomModal.classList.remove('active');
+  });
+
+  elements.btnConnectRoom.addEventListener('click', () => {
+    STATE.roomName = elements.inputRoomId.value.trim() || 'phong-hoc-01';
+    STATE.userName = elements.inputUserName.value.trim() || 'Thầy Giáo';
+    STATE.userRole = elements.selectUserRole.value;
+
+    initCollaboration();
+    elements.roomModal.classList.remove('active');
+    showToast(`🚀 Đã kết nối vào phòng: ${STATE.roomName}`, 'success');
+  });
+
+  elements.btnCopyRoomLink.addEventListener('click', () => {
+    const room = elements.inputRoomId.value.trim() || 'phong-hoc-01';
+    const link = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(room)}&role=student&name=HocSinh`;
+    
+    navigator.clipboard.writeText(link);
+    showToast('📋 Đã sao chép liên kết phòng cho học sinh!', 'info');
   });
 
   // Device Toggle
@@ -341,7 +468,7 @@ function setDeviceView(device) {
 function setupResizer() {
   let isDragging = false;
 
-  elements.resizer.addEventListener('mousedown', (e) => {
+  elements.resizer.addEventListener('mousedown', () => {
     isDragging = true;
     elements.resizer.classList.add('dragging');
     document.body.style.cursor = 'col-resize';
@@ -353,7 +480,6 @@ function setupResizer() {
     const containerWidth = document.querySelector('.main-container').clientWidth;
     let newLeftWidthPct = (e.clientX / containerWidth) * 100;
     
-    // Clamp between 20% and 80%
     newLeftWidthPct = Math.max(20, Math.min(80, newLeftWidthPct));
 
     elements.editorWrapper.style.width = `${newLeftWidthPct}%`;

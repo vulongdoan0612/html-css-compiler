@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HTML & CSS Live Compiler - Realtime Preview & Pretty Formatter</title>
-  <script type="module" crossorigin src="/assets/index-DXWWlYd4.js"></script>
+  <script type="module" crossorigin src="/assets/index-DOmS-esZ.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-BFVOQXyb.css">
 </head>
 <body>
@@ -15,10 +15,15 @@
       <div>
         <h1 class="brand-title">HTML & CSS Compiler</h1>
       </div>
-      <span class="badge-tag">LIVE COMPILER</span>
+      <span class="badge-tag" id="realtime-status-tag">REALTIME CONNECTING...</span>
     </div>
 
     <div class="header-actions">
+      <!-- Realtime Room Share Button -->
+      <button id="btn-share-room" class="btn btn-success" title="Tạo phòng hoặc chia sẻ liên kết lớp học">
+        <i data-lucide="users"></i> Phòng Học Realtime
+      </button>
+
       <!-- Templates Button -->
       <button id="btn-templates" class="btn" title="Chọn mẫu HTML/CSS có sẵn">
         <i data-lucide="layout"></i> Mẫu Giao Diện
@@ -35,7 +40,7 @@
       </button>
 
       <!-- Download Button -->
-      <button id="btn-download" class="btn btn-success" title="Tải xuống tập tin index.html">
+      <button id="btn-download" class="btn" title="Tải xuống tập tin index.html">
         <i data-lucide="download"></i> Tải HTML
       </button>
     </div>
@@ -56,6 +61,7 @@
         </div>
 
         <div class="editor-controls">
+          <span id="users-online-badge" style="font-size: 0.78rem; color: #a5b4fc; margin-right: 8px;">👥 1 người đang online</span>
           <button id="btn-clear" class="btn btn-icon-only" title="Xóa tất cả mã">
             <i data-lucide="trash-2"></i>
           </button>
@@ -132,13 +138,9 @@
   <!-- Footer Status Bar -->
   <footer class="app-footer">
     <div class="status-left">
-      <div class="status-item" title="Tự động gợi ý & tự động đóng thẻ tag HTML, gợi ý thuộc tính CSS">
-        <i data-lucide="check-circle" style="color: var(--accent-emerald); width: 14px;"></i>
-        <span>Auto-Closing Tags & CSS Autocomplete: ON</span>
-      </div>
-      <div class="status-item">
-        <i data-lucide="zap" style="color: var(--accent-cyan); width: 14px;"></i>
-        <span>Live Preview: Instant</span>
+      <div class="status-item" title="Đồng bộ Realtime 2 chiều bằng Yjs CRDT WebSocket">
+        <i data-lucide="radio" style="color: var(--accent-emerald); width: 14px;"></i>
+        <span id="footer-connection-status">Yjs Realtime Sync: Connected</span>
       </div>
     </div>
 
@@ -149,6 +151,46 @@
       </div>
     </div>
   </footer>
+
+  <!-- Realtime Room Modal -->
+  <div class="modal-overlay" id="room-modal">
+    <div class="modal-card" style="width: 440px;">
+      <div class="modal-header">
+        <h3>🌐 Cấu Hình Phòng Học Realtime</h3>
+        <button class="modal-close" id="btn-close-room-modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Mã Phòng (Room ID):</label>
+          <input type="text" id="input-room-id" value="phong-hoc-01" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--panel-border); background: var(--bg-dark); color: #fff; font-size: 0.9rem;" />
+        </div>
+
+        <div>
+          <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Tên của bạn:</label>
+          <input type="text" id="input-user-name" value="Thầy Giáo" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--panel-border); background: var(--bg-dark); color: #fff; font-size: 0.9rem;" />
+        </div>
+
+        <div>
+          <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Vai trò:</label>
+          <select id="select-user-role" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--panel-border); background: var(--bg-dark); color: #fff; font-size: 0.9rem;">
+            <option value="teacher">👨‍🏫 Giáo Viên</option>
+            <option value="student">👨‍🎓 Học Sinh</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button id="btn-connect-room" class="btn btn-primary" style="flex: 1; justify-content: center;">
+            🚀 Kết Nối Phòng
+          </button>
+          <button id="btn-copy-room-link" class="btn" style="flex: 1; justify-content: center;">
+            📋 Copy Link Gửi Học Trò
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Template Selector Modal -->
   <div class="modal-overlay" id="template-modal">
