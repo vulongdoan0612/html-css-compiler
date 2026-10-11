@@ -1,6 +1,9 @@
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import { setupWSConnection } from '../node_modules/y-websocket/bin/utils.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { setupWSConnection } = require('y-websocket/bin/utils');
 
 const PORT = process.env.PORT || 1234;
 

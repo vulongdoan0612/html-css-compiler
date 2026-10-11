@@ -2,11 +2,17 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
 export class CollaborationManager {
-  constructor(serverUrl, roomName, userProfile) {
+  constructor(serverUrl = null, roomName = 'default-room', userProfile = { name: 'Anonymous', role: 'student' }) {
     this.ydoc = new Y.Doc();
-    this.serverUrl = serverUrl;
+    
+    // Auto-detect production vs local server URL
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    this.serverUrl = serverUrl || (isLocal ? 'ws://localhost:1234' : 'wss://yjs-realtime-server.onrender.com');
+    
     this.roomName = roomName;
-    this.userProfile = userProfile; // { name: string, role: 'teacher' | 'student' }
+    this.userProfile = userProfile;
+
+    console.log(`Connecting to Yjs Realtime Server: ${this.serverUrl} [Room: ${this.roomName}]`);
 
     // Connect Y-websocket provider
     this.provider = new WebsocketProvider(this.serverUrl, this.roomName, this.ydoc);
