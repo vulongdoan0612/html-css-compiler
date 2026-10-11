@@ -2,12 +2,12 @@ import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
 export class CollaborationManager {
-  constructor(serverUrl = null, roomName = 'default-room', userProfile = { name: 'Anonymous', role: 'student' }) {
+  constructor(serverUrl = null, roomName = 'phong-hoc-01', userProfile = { name: 'Anonymous', role: 'student' }) {
     this.ydoc = new Y.Doc();
     
-    // Auto-detect production vs local server URL
+    // Auto-detect production WSS vs local WS on port 10000
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    this.serverUrl = serverUrl || (isLocal ? 'ws://localhost:1234' : 'wss://yjs-realtime-server.onrender.com');
+    this.serverUrl = serverUrl || (isLocal ? 'ws://localhost:10000' : 'wss://yjs-realtime-server.onrender.com');
     
     this.roomName = roomName;
     this.userProfile = userProfile;

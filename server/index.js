@@ -5,7 +5,7 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const { setupWSConnection } = require('y-websocket/bin/utils');
 
-const PORT = process.env.PORT || 1234;
+const PORT = process.env.PORT || 10000;
 
 const server = createServer((req, res) => {
   res.writeHead(200, {
