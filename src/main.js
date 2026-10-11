@@ -174,14 +174,24 @@ function initCollaboration() {
   // Observe Yjs Text changes from remote collaborators
   collabManager.yTextHTML.observe(() => {
     STATE.htmlCode = collabManager.yTextHTML.toString();
-    livePreview.update(STATE.htmlCode, STATE.cssCode, 100);
+    livePreview.update(STATE.htmlCode, STATE.cssCode, 50);
     updateStats();
   });
 
   collabManager.yTextCSS.observe(() => {
     STATE.cssCode = collabManager.yTextCSS.toString();
-    livePreview.update(STATE.htmlCode, STATE.cssCode, 100);
+    livePreview.update(STATE.htmlCode, STATE.cssCode, 50);
     updateStats();
+  });
+
+  // Auto-sync room HTML & CSS content immediately when Yjs connects & syncs
+  collabManager.provider.on('synced', (isSynced) => {
+    if (isSynced) {
+      STATE.htmlCode = collabManager.yTextHTML.toString();
+      STATE.cssCode = collabManager.yTextCSS.toString();
+      livePreview.update(STATE.htmlCode, STATE.cssCode, 0);
+      updateStats();
+    }
   });
 
   // Track Realtime Connection Status
@@ -191,6 +201,12 @@ function initCollaboration() {
       elements.realtimeStatusTag.style.background = 'rgba(16, 185, 129, 0.2)';
       elements.realtimeStatusTag.style.color = '#34d399';
       elements.footerConnStatus.textContent = `Yjs Realtime: Connected (${STATE.roomName})`;
+      
+      // Auto-sync current room content immediately
+      STATE.htmlCode = collabManager.yTextHTML.toString();
+      STATE.cssCode = collabManager.yTextCSS.toString();
+      livePreview.update(STATE.htmlCode, STATE.cssCode, 0);
+      updateStats();
     } else {
       elements.realtimeStatusTag.textContent = `🟡 DISCONNECTED`;
       elements.realtimeStatusTag.style.background = 'rgba(239, 68, 68, 0.2)';
