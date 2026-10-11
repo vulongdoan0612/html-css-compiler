@@ -5,6 +5,24 @@ import { LivePreview } from './preview.js';
 import { defaultTemplates } from './templates.js';
 import { CollaborationManager } from './collaboration.js';
 
+// Read parameters dynamically from current web URL without hardcoding
+function getInitialUrlParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const room = urlParams.get('room') || `room-${Math.random().toString(36).substring(2, 8)}`;
+  const role = urlParams.get('role') || 'student';
+  const name = urlParams.get('name') || (role === 'teacher' ? 'Giáo Viên' : 'Học Sinh');
+
+  // Auto-reflect room in URL if accessing clean root URL
+  if (!urlParams.has('room')) {
+    const newUrl = `${window.location.pathname}?room=${encodeURIComponent(room)}&role=${encodeURIComponent(role)}&name=${encodeURIComponent(name)}`;
+    window.history.replaceState({}, '', newUrl);
+  }
+
+  return { room, role, name };
+}
+
+const initialParams = getInitialUrlParams();
+
 // Global Application State (Strictly HTML & CSS)
 const STATE = {
   htmlCode: '',
@@ -13,9 +31,9 @@ const STATE = {
   activeDevice: 'desktop',
   autoSaveKey: 'html_css_compiler_data_v3',
   consoleLogs: [],
-  roomName: 'phong-hoc-01',
-  userName: 'Thầy Giáo',
-  userRole: 'teacher'
+  roomName: initialParams.room,
+  userName: initialParams.name,
+  userRole: initialParams.role
 };
 
 // DOM Element Selectors
