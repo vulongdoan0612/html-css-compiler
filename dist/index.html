@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML & CSS Live Compiler - Realtime Preview & Pretty Formatter</title>
+  <script type="module" crossorigin src="/assets/index-DXWWlYd4.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BFVOQXyb.css">
+</head>
+<body>
+  <!-- Application Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">&lt;/&gt;</div>
+      <div>
+        <h1 class="brand-title">HTML & CSS Compiler</h1>
+      </div>
+      <span class="badge-tag">LIVE COMPILER</span>
+    </div>
+
+    <div class="header-actions">
+      <!-- Templates Button -->
+      <button id="btn-templates" class="btn" title="Chọn mẫu HTML/CSS có sẵn">
+        <i data-lucide="layout"></i> Mẫu Giao Diện
+      </button>
+
+      <!-- Format Code Button -->
+      <button id="btn-format" class="btn btn-primary" title="Định dạng HTML & CSS đẹp mắt (Pretty Format)">
+        <i data-lucide="wand2"></i> Format Pretty
+      </button>
+
+      <!-- Copy HTML -->
+      <button id="btn-copy" class="btn" title="Sao chép toàn bộ HTML + CSS hợp nhất">
+        <i data-lucide="copy"></i> Copy Code
+      </button>
+
+      <!-- Download Button -->
+      <button id="btn-download" class="btn btn-success" title="Tải xuống tập tin index.html">
+        <i data-lucide="download"></i> Tải HTML
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <!-- Left Pane: Code Editors -->
+    <div class="pane pane-editor-wrapper" id="editor-wrapper">
+      <div class="editor-header">
+        <div class="tabs-list">
+          <button class="tab-btn active" data-tab="html">
+            <span class="tab-badge-html">&lt;&gt;</span> HTML
+          </button>
+          <button class="tab-btn" data-tab="css">
+            <span class="tab-badge-css">#</span> CSS
+          </button>
+        </div>
+
+        <div class="editor-controls">
+          <button id="btn-clear" class="btn btn-icon-only" title="Xóa tất cả mã">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Panes Container -->
+      <div class="editor-container">
+        <div class="editor-pane active" id="editor-html-container"></div>
+        <div class="editor-pane" id="editor-css-container"></div>
+      </div>
+    </div>
+
+    <!-- Resizer Divider -->
+    <div class="resizer" id="drag-resizer"></div>
+
+    <!-- Right Pane: Live Preview -->
+    <div class="pane pane-preview-wrapper" id="preview-wrapper">
+      <div class="preview-header">
+        <div class="preview-title">
+          <span class="live-indicator" id="live-indicator"></span>
+          <span>Live Preview Realtime</span>
+        </div>
+
+        <!-- Device Selector -->
+        <div class="device-selector">
+          <button class="device-btn active" data-device="desktop" title="Màn hình Máy tính (100%)">
+            <i data-lucide="monitor"></i> Desktop
+          </button>
+          <button class="device-btn" data-device="tablet" title="Màn hình Tablet (768px)">
+            <i data-lucide="tablet"></i> Tablet
+          </button>
+          <button class="device-btn" data-device="mobile" title="Màn hình Điện thoại (375px)">
+            <i data-lucide="smartphone"></i> Mobile
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="dimension-badge" id="dimension-badge">100%</span>
+          <button id="btn-fullscreen" class="btn btn-icon-only" title="Xem full màn hình">
+            <i data-lucide="maximize-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Viewport Frame -->
+      <div class="preview-body">
+        <div class="iframe-wrapper desktop" id="iframe-wrapper">
+          <iframe id="preview-iframe" title="Live HTML Preview" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+        </div>
+      </div>
+
+      <!-- Console Logs Drawer -->
+      <div class="console-panel collapsed" id="console-panel">
+        <div class="console-header" id="console-header">
+          <div class="console-title">
+            <i data-lucide="terminal"></i> Dynamic Console Logs
+            <span class="console-count" id="console-count">0</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-clear-console" class="btn btn-icon-only" style="padding: 2px 6px;" title="Xóa logs">
+              <i data-lucide="slash"></i>
+            </button>
+            <button id="btn-toggle-console" class="btn btn-icon-only" style="padding: 2px 6px;">
+              <i data-lucide="chevron-up" id="console-chevron"></i>
+            </button>
+          </div>
+        </div>
+        <div class="console-logs" id="console-logs"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Status Bar -->
+  <footer class="app-footer">
+    <div class="status-left">
+      <div class="status-item" title="Tự động gợi ý & tự động đóng thẻ tag HTML, gợi ý thuộc tính CSS">
+        <i data-lucide="check-circle" style="color: var(--accent-emerald); width: 14px;"></i>
+        <span>Auto-Closing Tags & CSS Autocomplete: ON</span>
+      </div>
+      <div class="status-item">
+        <i data-lucide="zap" style="color: var(--accent-cyan); width: 14px;"></i>
+        <span>Live Preview: Instant</span>
+      </div>
+    </div>
+
+    <div class="status-right">
+      <div class="status-item" id="stats-chars">Lines: 0 | Chars: 0</div>
+      <div class="status-item" id="status-saved">
+        <i data-lucide="cloud" style="width: 14px;"></i> Tự động lưu
+      </div>
+    </div>
+  </footer>
+
+  <!-- Template Selector Modal -->
+  <div class="modal-overlay" id="template-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Kho Mẫu HTML/CSS Giao Diện</h3>
+        <button class="modal-close" id="btn-close-modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="template-grid" id="template-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+</body>
+</html>
