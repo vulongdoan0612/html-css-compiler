@@ -11,7 +11,7 @@ const STATE = {
   cssCode: '',
   activeTab: 'html',
   activeDevice: 'desktop',
-  autoSaveKey: 'html_css_compiler_data_v2',
+  autoSaveKey: 'html_css_compiler_data_v3',
   consoleLogs: [],
   roomName: 'phong-hoc-01',
   userName: 'Thầy Giáo',
@@ -242,10 +242,9 @@ function loadSavedData() {
     }
   }
 
-  // Default to hero template if clean state
-  const hero = defaultTemplates[0];
-  STATE.htmlCode = hero.html;
-  STATE.cssCode = hero.css;
+  // Default to clean blank state
+  STATE.htmlCode = '';
+  STATE.cssCode = '';
 }
 
 /**
